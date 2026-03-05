@@ -285,7 +285,8 @@ The database schema is automatically initialized when the PostgreSQL container s
 - `GET /api/areas` - Get all areas
 - `GET /api/areas/types` - Get all area types
 - `POST /api/areas` - Create area
-- `POST /api/areas/types` - Create area type
+- `POST /api/areas/types` - Create area type (restricted to Admin/Central Manager/Hospital Manager roles)
+- `PUT /api/areas/types/:id` - Update area type (restricted to Admin/Central Manager/Hospital Manager roles)
 - `PUT /api/areas/:id` - Update area
 - `DELETE /api/areas/:id` - Delete area
 
@@ -306,9 +307,17 @@ The database schema is automatically initialized when the PostgreSQL container s
 - `PUT /api/notifications/settings/my` - Update notification settings
 
 ### Settings
+
+General settings page includes a subsection for managing **Asset Categories** (used when creating assets and elsewhere in the system).
+- Separate **Alan Türleri** tab – list types grouped by category and add new types. You can specify a category manually or select an existing one before creating the type, edit or delete entries as needed. **Note:** modifying area types is limited to users with Admin/Central Manager/Hospital Manager roles.
+
 - `GET /api/settings/system` - Get system settings
 - `PUT /api/settings/system/:key` - Update system setting
 - `GET /api/settings/categories` - Get asset categories
+- `GET /api/areas/types` - Get area types (with category field)
+- `POST /api/areas/types` - Create new area type
+- `PUT /api/areas/types/:id` - Update area type
+- `DELETE /api/areas/types/:id` - Delete area type
 - `GET /api/settings/measurement-units` - Get measurement units
 - `GET /api/settings/energy-types` - Get energy types
 - `GET /api/settings/departments` - Get authorized departments

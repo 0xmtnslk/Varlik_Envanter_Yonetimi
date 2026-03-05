@@ -45,6 +45,7 @@ const Layout = () => {
     { name: 'Kullanıcılar', href: '/settings/users', icon: Users, roles: ['Admin', 'Manager', 'Hospital Manager', 'Central Manager'] },
     { name: 'Rol Yönetimi', href: '/settings/roles', icon: Users, roles: ['Admin', 'Hospital Manager', 'Central Manager'] },
     { name: 'Tesisler', href: '/settings/facilities', icon: Building2, roles: ['Admin', 'Central Manager'] },
+    { name: 'Alan Türleri', href: '/settings/area-types', icon: Map, roles: ['Admin', 'Central Manager'] },
   ]
 
   const filteredNavigation = navigationItems.filter(item => hasRole(item.roles))
