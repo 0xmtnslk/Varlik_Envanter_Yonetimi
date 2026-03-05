@@ -386,3 +386,80 @@ This project is proprietary software.
 ## Support
 
 For support, contact the development team.
+
+## Git Commands for Pushing Changes to GitHub
+
+### Step 1: Check the current status
+```bash
+git status
+```
+This shows which files have been modified, added, or deleted.
+
+### Step 2: Add all changes
+```bash
+git add .
+```
+This stages all modified and new files for commit.
+
+### Step 3: Commit your changes
+```bash
+git commit -m "Your commit message here"
+```
+Replace "Your commit message here" with a descriptive message about what you changed.
+
+### Step 4: Push to GitHub
+```bash
+git push origin main
+```
+This pushes your changes to the `main` branch on GitHub.
+
+---
+
+### Quick Reference Commands
+
+**For frequent commits:**
+```bash
+git add . && git commit -m "Your message" && git push origin main
+```
+
+**To see what will be committed:**
+```bash
+git diff --staged
+```
+
+**To see uncommitted changes:**
+```bash
+git diff
+```
+
+**To see commit history:**
+```bash
+git log --oneline
+```
+
+---
+
+### Example Workflow
+
+```bash
+# 1. Check status
+git status
+
+# 2. Add all changes
+git add .
+
+# 3. Commit with a descriptive message
+git commit -m "Added facility blocks management feature"
+
+# 4. Push to GitHub
+git push origin main
+```
+
+---
+
+### Important Notes
+
+- Always use meaningful commit messages
+- Commit frequently with small, logical changes
+- Make sure you're on the `main` branch: `git branch`
+- If there are conflicts, use: `git pull origin main` before pushing
