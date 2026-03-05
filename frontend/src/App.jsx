@@ -10,6 +10,9 @@ import Areas from './pages/Areas'
 import Calendar from './pages/Calendar'
 import Notifications from './pages/Notifications'
 import SettingsPage from './pages/Settings'
+import FacilitiesList from './pages/FacilitiesList'
+import FacilityForm from './pages/FacilityForm'
+import FacilityDetail from './pages/FacilityDetail'
 import NotFound from './pages/NotFound'
 
 // Protected Route Component
@@ -82,7 +85,11 @@ function App() {
             <Route path="areas" element={<Areas />} />
             <Route path="calendar" element={<Calendar />} />
             <Route path="notifications" element={<Notifications />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="settings/facilities" element={<FacilitiesList />} />
+            <Route path="settings/facilities/new" element={<FacilityForm />} />
+            <Route path="settings/facilities/:id" element={<FacilityDetail />} />
+            <Route path="settings/facilities/:id/edit" element={<FacilityForm />} />
+            <Route path="settings/:tab" element={<SettingsPage />} />
           </Route>
           
           {/* 404 Route */}

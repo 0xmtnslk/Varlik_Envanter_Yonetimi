@@ -90,7 +90,14 @@ CREATE TABLE IF NOT EXISTS facility_blocks (
     facility_id UUID NOT NULL REFERENCES facilities(id) ON DELETE CASCADE,
     block_name VARCHAR(100) NOT NULL,
     block_number INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    building_construction_year INTEGER,
+    building_height DECIMAL(10, 2),
+    structure_height DECIMAL(10, 2),
+    floor_count INTEGER,
+    closed_area DECIMAL(15, 2),
+    closed_parking_area DECIMAL(15, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Area Types Table
@@ -493,6 +500,9 @@ CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_facilities_updated_at BEFORE UPDATE ON facilities
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_facility_blocks_updated_at BEFORE UPDATE ON facility_blocks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_areas_updated_at BEFORE UPDATE ON areas

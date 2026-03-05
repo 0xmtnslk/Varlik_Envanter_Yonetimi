@@ -37,7 +37,7 @@ services:
       JWT_SECRET: your_jwt_secret_key_change_in_production
       ORACLE_API_URL: http://oracle-system:8080/api
     ports:
-      - "3001:3001"
+      - "5001:3001"
     networks:
       - asset_network
     depends_on:

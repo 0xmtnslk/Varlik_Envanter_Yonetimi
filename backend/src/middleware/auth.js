@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 
 const auth = async (req, res, next) => {
+  // Skip authentication for OPTIONS requests (preflight)
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
@@ -18,6 +23,11 @@ const auth = async (req, res, next) => {
 
 const authorize = (...roles) => {
   return (req, res, next) => {
+    // Skip authorization for OPTIONS requests (preflight)
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -31,6 +41,11 @@ const authorize = (...roles) => {
 };
 
 const checkFacilityAccess = (req, res, next) => {
+  // Skip check for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   const facilityId = req.params.facilityId || req.body.facilityId;
   
   if (!facilityId) {

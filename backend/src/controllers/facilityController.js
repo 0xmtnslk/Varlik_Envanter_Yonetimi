@@ -1,4 +1,7 @@
 const { query } = require('../config/database');
+const csv = require('csv-parser');
+const fs = require('fs');
+const { stringify } = require('csv-stringify/sync');
 
 const getAllFacilities = async (req, res) => {
   try {
@@ -78,6 +81,7 @@ const getFacilityById = async (req, res) => {
 
 const createFacility = async (req, res) => {
   try {
+    console.log('Create facility request body:', JSON.stringify(req.body, null, 2));
     const {
       facility_code,
       name,
@@ -94,40 +98,78 @@ const createFacility = async (req, res) => {
       nace_code,
       workplace_hazard_class,
       block_count,
-      building_construction_year,
-      building_height,
-      structure_height,
-      floor_count,
-      closed_area,
-      closed_parking_area,
       bed_count,
       employee_count,
       contractor_employee_count,
-      facility_manager_id
+      facility_manager_id,
+      blocks = []
     } = req.body;
     
-    const result = await query(
-      `INSERT INTO facilities (
-        facility_code, name, short_name, facility_type, address, city, district,
-        website, phone, email, trade_name, sgk_registration_number, nace_code,
-        workplace_hazard_class, block_count, building_construction_year, building_height,
-        structure_height, floor_count, closed_area, closed_parking_area, bed_count,
-        employee_count, contractor_employee_count, facility_manager_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
-      RETURNING *`,
-      [
-        facility_code, name, short_name, facility_type, address, city, district,
-        website, phone, email, trade_name, sgk_registration_number, nace_code,
-        workplace_hazard_class, block_count, building_construction_year, building_height,
-        structure_height, floor_count, closed_area, closed_parking_area, bed_count,
-        employee_count, contractor_employee_count, facility_manager_id
-      ]
-    );
+    // Convert empty strings to null for UUID fields
+    const processedFacilityManagerId = facility_manager_id && facility_manager_id.trim() !== '' ? facility_manager_id : null;
     
-    res.status(201).json({ message: 'Facility created successfully', facility: result.rows[0] });
+    // Validate required fields
+    if (!name || !facility_type) {
+      return res.status(400).json({ error: 'Tesis adı ve tipi gereklidir' });
+    }
+    
+    let facilityResult;
+    try {
+      facilityResult = await query(
+        `INSERT INTO facilities (
+          facility_code, name, short_name, facility_type, address, city, district,
+          website, phone, email, trade_name, sgk_registration_number, nace_code,
+          workplace_hazard_class, block_count, bed_count,
+          employee_count, contractor_employee_count, facility_manager_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        RETURNING *`,
+        [
+          facility_code, name, short_name, facility_type, address, city, district,
+          website, phone, email, trade_name, sgk_registration_number, nace_code,
+          workplace_hazard_class, block_count, bed_count,
+          employee_count, contractor_employee_count, processedFacilityManagerId
+        ]
+      );
+    } catch (dbError) {
+      console.error('Database error while creating facility:', dbError);
+      return res.status(500).json({ error: 'Tesis kaydı başarısız oldu: ' + dbError.message });
+    }
+    
+    const facilityId = facilityResult.rows[0].id;
+    
+    // Insert blocks if provided
+    if (blocks && blocks.length > 0) {
+      try {
+        for (const block of blocks) {
+          const blockName = block.block_name && block.block_name.trim() !== '' ? block.block_name : `Blok ${block.block_number || 1}`;
+          await query(
+            `INSERT INTO facility_blocks (
+              facility_id, block_name, block_number, building_construction_year,
+              building_height, structure_height, floor_count, closed_area, closed_parking_area
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [
+              facilityId,
+              blockName,
+              block.block_number || 1,
+              block.building_construction_year ? parseInt(block.building_construction_year) : null,
+              block.building_height ? parseFloat(block.building_height) : null,
+              block.structure_height ? parseFloat(block.structure_height) : null,
+              block.floor_count ? parseInt(block.floor_count) : null,
+              block.closed_area ? parseFloat(block.closed_area) : null,
+              block.closed_parking_area ? parseFloat(block.closed_parking_area) : null
+            ]
+          );
+        }
+      } catch (blockError) {
+        console.error('Database error while creating blocks:', blockError);
+        return res.status(500).json({ error: 'Blok kaydı başarısız oldu: ' + blockError.message });
+      }
+    }
+    
+    res.status(201).json({ message: 'Facility created successfully', facility: facilityResult.rows[0] });
   } catch (error) {
     console.error('Create facility error:', error);
-    res.status(500).json({ error: 'Failed to create facility' });
+    res.status(500).json({ error: 'Tesis oluşturma başarısız: ' + (error.message || 'Bilinmeyen hata') });
   }
 };
 
@@ -149,66 +191,97 @@ const updateFacility = async (req, res) => {
       nace_code,
       workplace_hazard_class,
       block_count,
-      building_construction_year,
-      building_height,
-      structure_height,
-      floor_count,
-      closed_area,
-      closed_parking_area,
       bed_count,
       employee_count,
       contractor_employee_count,
-      facility_manager_id
+      facility_manager_id,
+      blocks = []
     } = req.body;
     
-    const result = await query(
-      `UPDATE facilities 
-       SET facility_code = COALESCE($1, facility_code),
-           name = COALESCE($2, name),
-           short_name = COALESCE($3, short_name),
-           facility_type = COALESCE($4, facility_type),
-           address = COALESCE($5, address),
-           city = COALESCE($6, city),
-           district = COALESCE($7, district),
-           website = COALESCE($8, website),
-           phone = COALESCE($9, phone),
-           email = COALESCE($10, email),
-           trade_name = COALESCE($11, trade_name),
-           sgk_registration_number = COALESCE($12, sgk_registration_number),
-           nace_code = COALESCE($13, nace_code),
-           workplace_hazard_class = COALESCE($14, workplace_hazard_class),
-           block_count = COALESCE($15, block_count),
-           building_construction_year = COALESCE($16, building_construction_year),
-           building_height = COALESCE($17, building_height),
-           structure_height = COALESCE($18, structure_height),
-           floor_count = COALESCE($19, floor_count),
-           closed_area = COALESCE($20, closed_area),
-           closed_parking_area = COALESCE($21, closed_parking_area),
-           bed_count = COALESCE($22, bed_count),
-           employee_count = COALESCE($23, employee_count),
-           contractor_employee_count = COALESCE($24, contractor_employee_count),
-           facility_manager_id = COALESCE($25, facility_manager_id),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE id = $26
-       RETURNING *`,
-      [
-        facility_code, name, short_name, facility_type, address, city, district,
-        website, phone, email, trade_name, sgk_registration_number, nace_code,
-        workplace_hazard_class, block_count, building_construction_year, building_height,
-        structure_height, floor_count, closed_area, closed_parking_area, bed_count,
-        employee_count, contractor_employee_count, facility_manager_id,
-        req.params.id
-      ]
-    );
+    // Convert empty strings to null for UUID fields
+    const processedFacilityManagerId = facility_manager_id && facility_manager_id.trim() !== '' ? facility_manager_id : null;
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Facility not found' });
+    let facilityResult;
+    try {
+      facilityResult = await query(
+        `UPDATE facilities 
+         SET facility_code = COALESCE($1, facility_code),
+             name = COALESCE($2, name),
+             short_name = COALESCE($3, short_name),
+             facility_type = COALESCE($4, facility_type),
+             address = COALESCE($5, address),
+             city = COALESCE($6, city),
+             district = COALESCE($7, district),
+             website = COALESCE($8, website),
+             phone = COALESCE($9, phone),
+             email = COALESCE($10, email),
+             trade_name = COALESCE($11, trade_name),
+             sgk_registration_number = COALESCE($12, sgk_registration_number),
+             nace_code = COALESCE($13, nace_code),
+             workplace_hazard_class = COALESCE($14, workplace_hazard_class),
+             block_count = COALESCE($15, block_count),
+             bed_count = COALESCE($16, bed_count),
+             employee_count = COALESCE($17, employee_count),
+             contractor_employee_count = COALESCE($18, contractor_employee_count),
+             facility_manager_id = COALESCE($19, facility_manager_id),
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $20
+         RETURNING *`,
+        [
+          facility_code, name, short_name, facility_type, address, city, district,
+          website, phone, email, trade_name, sgk_registration_number, nace_code,
+          workplace_hazard_class, block_count, bed_count,
+          employee_count, contractor_employee_count, processedFacilityManagerId,
+          req.params.id
+        ]
+      );
+    } catch (dbError) {
+      console.error('Database error while updating facility:', dbError);
+      return res.status(500).json({ error: 'Tesis güncellemesi başarısız oldu: ' + dbError.message });
     }
     
-    res.json({ message: 'Facility updated successfully', facility: result.rows[0] });
+    if (facilityResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Tesis bulunamadı' });
+    }
+
+    // Delete existing blocks and insert new ones
+    try {
+      await query(
+        'DELETE FROM facility_blocks WHERE facility_id = $1',
+        [req.params.id]
+      );
+
+      if (blocks && blocks.length > 0) {
+        for (const block of blocks) {
+          const blockName = block.block_name && block.block_name.trim() !== '' ? block.block_name : `Blok ${block.block_number || 1}`;
+          await query(
+            `INSERT INTO facility_blocks (
+              facility_id, block_name, block_number, building_construction_year,
+              building_height, structure_height, floor_count, closed_area, closed_parking_area
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [
+              req.params.id,
+              blockName,
+              block.block_number || 1,
+              block.building_construction_year ? parseInt(block.building_construction_year) : null,
+              block.building_height ? parseFloat(block.building_height) : null,
+              block.structure_height ? parseFloat(block.structure_height) : null,
+              block.floor_count ? parseInt(block.floor_count) : null,
+              block.closed_area ? parseFloat(block.closed_area) : null,
+              block.closed_parking_area ? parseFloat(block.closed_parking_area) : null
+            ]
+          );
+        }
+      }
+    } catch (blockError) {
+      console.error('Database error while updating blocks:', blockError);
+      return res.status(500).json({ error: 'Blok güncellemesi başarısız oldu: ' + blockError.message });
+    }
+    
+    res.json({ message: 'Facility updated successfully', facility: facilityResult.rows[0] });
   } catch (error) {
     console.error('Update facility error:', error);
-    res.status(500).json({ error: 'Failed to update facility' });
+    res.status(500).json({ error: 'Tesis güncellemesi başarısız: ' + (error.message || 'Bilinmeyen hata') });
   }
 };
 
@@ -246,11 +319,26 @@ const getFacilityBlocks = async (req, res) => {
 
 const addBlock = async (req, res) => {
   try {
-    const { block_name, block_number } = req.body;
+    const {
+      block_name,
+      block_number,
+      building_construction_year,
+      building_height,
+      structure_height,
+      floor_count,
+      closed_area,
+      closed_parking_area
+    } = req.body;
     
     const result = await query(
-      'INSERT INTO facility_blocks (facility_id, block_name, block_number) VALUES ($1, $2, $3) RETURNING *',
-      [req.params.id, block_name, block_number]
+      `INSERT INTO facility_blocks (
+        facility_id, block_name, block_number, building_construction_year,
+        building_height, structure_height, floor_count, closed_area, closed_parking_area
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      [
+        req.params.id, block_name, block_number, building_construction_year,
+        building_height, structure_height, floor_count, closed_area, closed_parking_area
+      ]
     );
     
     res.status(201).json({ message: 'Block added successfully', block: result.rows[0] });
@@ -262,15 +350,35 @@ const addBlock = async (req, res) => {
 
 const updateBlock = async (req, res) => {
   try {
-    const { block_name, block_number } = req.body;
+    const {
+      block_name,
+      block_number,
+      building_construction_year,
+      building_height,
+      structure_height,
+      floor_count,
+      closed_area,
+      closed_parking_area
+    } = req.body;
     
     const result = await query(
-      `UPDATE facility_blocks 
+      `UPDATE facility_blocks
        SET block_name = COALESCE($1, block_name),
-           block_number = COALESCE($2, block_number)
-       WHERE id = $3
+           block_number = COALESCE($2, block_number),
+           building_construction_year = COALESCE($3, building_construction_year),
+           building_height = COALESCE($4, building_height),
+           structure_height = COALESCE($5, structure_height),
+           floor_count = COALESCE($6, floor_count),
+           closed_area = COALESCE($7, closed_area),
+           closed_parking_area = COALESCE($8, closed_parking_area),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $9
        RETURNING *`,
-      [block_name, block_number, req.params.blockId]
+      [
+        block_name, block_number, building_construction_year, building_height,
+        structure_height, floor_count, closed_area, closed_parking_area,
+        req.params.blockId
+      ]
     );
     
     if (result.rows.length === 0) {
@@ -342,6 +450,246 @@ const getFacilityStatistics = async (req, res) => {
   }
 };
 
+const importFacilitiesFromCSV = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const facilities = [];
+    const blocks = [];
+    
+    // Parse CSV file
+    const results = await new Promise((resolve, reject) => {
+      const results = [];
+      const stream = fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => resolve(results))
+        .on('error', (error) => reject(error));
+    });
+
+    // Process each row
+    for (const row of results) {
+      // Skip empty rows
+      if (!row['Tesis Adı']) continue;
+
+      // Create facility
+      const facilityData = {
+        facility_code: row['Tesis ID'] || null,
+        name: row['Tesis Adı'],
+        short_name: row['Tesis Kısa Adı'] || null,
+        facility_type: row['Tesis Tipi'],
+        address: row['Adres'] || null,
+        city: row['İl'] || null,
+        district: row['İlçe'] || null,
+        website: row['Web Sitesi'] || null,
+        phone: row['Telefon'] || null,
+        email: row['E-posta'] || null,
+        trade_name: row['Ticari Unvan'] || null,
+        sgk_registration_number: row['SGK Sicil Numarası'] || null,
+        nace_code: row['Nace Kodu'] || null,
+        workplace_hazard_class: row['İşyeri Tehlike Sınıfı'] || null,
+        block_count: row['Blok Sayısı'] ? parseInt(row['Blok Sayısı']) : 1,
+        building_construction_year: row['Bina Yapım Yılı'] ? parseInt(row['Bina Yapım Yılı']) : null,
+        building_height: row['Bina Yüksekliği'] ? parseFloat(row['Bina Yüksekliği']) : null,
+        structure_height: row['Yapı Yüksekliği'] ? parseFloat(row['Yapı Yüksekliği']) : null,
+        floor_count: row['Kat Sayısı'] ? parseInt(row['Kat Sayısı']) : null,
+        closed_area: row['Kapalı Alan'] ? parseFloat(row['Kapalı Alan']) : null,
+        closed_parking_area: row['Kapalı Otopark Alanı'] ? parseFloat(row['Kapalı Otopark Alanı']) : null,
+        bed_count: row['Yatak Sayısı'] ? parseInt(row['Yatak Sayısı']) : null,
+        employee_count: row['Çalışan Sayısı'] ? parseInt(row['Çalışan Sayısı']) : null,
+        contractor_employee_count: row['Taşeron Çalışan Sayısı'] ? parseInt(row['Taşeron Çalışan Sayısı']) : null,
+        facility_manager_id: null // Will need to look up user by name
+      };
+
+      facilities.push(facilityData);
+
+      // If blocks are specified in the CSV
+      if (row['Blok Adı']) {
+        const blockNames = row['Blok Adı'].split(';');
+        const blockNumbers = row['Blok Numarası'] ? row['Blok Numarası'].split(';') : [];
+        const buildingYears = row['Bina Yapım Yılı'] ? row['Bina Yapım Yılı'].split(';') : [];
+        const buildingHeights = row['Bina Yüksekliği'] ? row['Bina Yüksekliği'].split(';') : [];
+        const structureHeights = row['Yapı Yüksekliği'] ? row['Yapı Yüksekliği'].split(';') : [];
+        const floorCounts = row['Kat Sayısı'] ? row['Kat Sayısı'].split(';') : [];
+        const closedAreas = row['Kapalı Alan'] ? row['Kapalı Alan'].split(';') : [];
+        const parkingAreas = row['Kapalı Otopark Alanı'] ? row['Kapalı Otopark Alanı'].split(';') : [];
+
+        blockNames.forEach((blockName, index) => {
+          blocks.push({
+            block_name: blockName.trim(),
+            block_number: blockNumbers[index] ? parseInt(blockNumbers[index]) : index + 1,
+            building_construction_year: buildingYears[index] ? parseInt(buildingYears[index]) : null,
+            building_height: buildingHeights[index] ? parseFloat(buildingHeights[index]) : null,
+            structure_height: structureHeights[index] ? parseFloat(structureHeights[index]) : null,
+            floor_count: floorCounts[index] ? parseInt(floorCounts[index]) : null,
+            closed_area: closedAreas[index] ? parseFloat(closedAreas[index]) : null,
+            closed_parking_area: parkingAreas[index] ? parseFloat(parkingAreas[index]) : null
+          });
+        });
+      }
+    }
+
+    // Insert facilities
+    const insertedFacilities = [];
+    for (const facility of facilities) {
+      const result = await query(
+        `INSERT INTO facilities (
+          facility_code, name, short_name, facility_type, address, city, district,
+          website, phone, email, trade_name, sgk_registration_number, nace_code,
+          workplace_hazard_class, block_count, building_construction_year, building_height,
+          structure_height, floor_count, closed_area, closed_parking_area, bed_count,
+          employee_count, contractor_employee_count, facility_manager_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+        RETURNING *`,
+        [
+          facility.facility_code, facility.name, facility.short_name, facility.facility_type,
+          facility.address, facility.city, facility.district, facility.website, facility.phone,
+          facility.email, facility.trade_name, facility.sgk_registration_number, facility.nace_code,
+          facility.workplace_hazard_class, facility.block_count, facility.building_construction_year,
+          facility.building_height, facility.structure_height, facility.floor_count,
+          facility.closed_area, facility.closed_parking_area, facility.bed_count,
+          facility.employee_count, facility.contractor_employee_count, facility.facility_manager_id
+        ]
+      );
+      insertedFacilities.push(result.rows[0]);
+    }
+
+    // Insert blocks for each facility
+    let blockIndex = 0;
+    for (const facility of insertedFacilities) {
+      const facilityBlocks = blocks.filter((_, index) => {
+        const belongsToFacility = Math.floor(index / facility.block_count) === insertedFacilities.indexOf(facility);
+        return belongsToFacility;
+      });
+
+      for (const block of facilityBlocks) {
+        await query(
+          `INSERT INTO facility_blocks (
+            facility_id, block_name, block_number, building_construction_year,
+            building_height, structure_height, floor_count, closed_area, closed_parking_area
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [
+            facility.id, block.block_name, block.block_number, block.building_construction_year,
+            block.building_height, block.structure_height, block.floor_count,
+            block.closed_area, block.closed_parking_area
+          ]
+        );
+      }
+    }
+
+    // Delete uploaded file
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(201).json({
+      message: 'Facilities imported successfully',
+      imported: facilities.length,
+      facilities: insertedFacilities
+    });
+  } catch (error) {
+    console.error('Import facilities error:', error);
+    // Delete uploaded file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ error: 'Failed to import facilities', details: error.message });
+  }
+};
+
+const exportFacilitiesToCSV = async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT
+        f.*,
+        u.first_name || ' ' || u.last_name as facility_manager_name
+       FROM facilities f
+       LEFT JOIN users u ON f.facility_manager_id = u.id
+       WHERE f.is_active = true
+       ORDER BY f.name ASC`
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'No facilities found' });
+    }
+
+    // Get blocks for each facility
+    const facilitiesWithBlocks = await Promise.all(
+      result.rows.map(async (facility) => {
+        const blocksResult = await query(
+          'SELECT * FROM facility_blocks WHERE facility_id = $1 ORDER BY block_number ASC',
+          [facility.id]
+        );
+        
+        const blockNames = blocksResult.rows.map(b => b.block_name).join('; ');
+        const blockNumbers = blocksResult.rows.map(b => b.block_number).join('; ');
+        const buildingYears = blocksResult.rows.map(b => b.building_construction_year).join('; ');
+        const buildingHeights = blocksResult.rows.map(b => b.building_height).join('; ');
+        const structureHeights = blocksResult.rows.map(b => b.structure_height).join('; ');
+        const floorCounts = blocksResult.rows.map(b => b.floor_count).join('; ');
+        const closedAreas = blocksResult.rows.map(b => b.closed_area).join('; ');
+        const parkingAreas = blocksResult.rows.map(b => b.closed_parking_area).join('; ');
+
+        return {
+          'Tesis ID': facility.facility_code,
+          'Tesis Adı': facility.name,
+          'Tesis Kısa Adı': facility.short_name,
+          'Tesis Tipi': facility.facility_type,
+          'Adres': facility.address,
+          'İl': facility.city,
+          'İlçe': facility.district,
+          'Web Sitesi': facility.website,
+          'Telefon': facility.phone,
+          'E-posta': facility.email,
+          'Ticari Unvan': facility.trade_name,
+          'SGK Sicil Numarası': facility.sgk_registration_number,
+          'Nace Kodu': facility.nace_code,
+          'İşyeri Tehlike Sınıfı': facility.workplace_hazard_class,
+          'Blok Sayısı': facility.block_count,
+          'Bina Yapım Yılı': facility.building_construction_year,
+          'Bina Yüksekliği': facility.building_height,
+          'Yapı Yüksekliği': facility.structure_height,
+          'Kat Sayısı': facility.floor_count,
+          'Kapalı Alan': facility.closed_area,
+          'Kapalı Otopark Alanı': facility.closed_parking_area,
+          'Yatak Sayısı': facility.bed_count,
+          'Çalışan Sayısı': facility.employee_count,
+          'Taşeron Çalışan Sayısı': facility.contractor_employee_count,
+          'Tesis Yöneticisi': facility.facility_manager_name,
+          'Blok Adı': blockNames,
+          'Blok Numarası': blockNumbers,
+          'Bina Yapım Yılı (Blok)': buildingYears,
+          'Bina Yüksekliği (Blok)': buildingHeights,
+          'Yapı Yüksekliği (Blok)': structureHeights,
+          'Kat Sayısı (Blok)': floorCounts,
+          'Kapalı Alan (Blok)': closedAreas,
+          'Kapalı Otopark Alanı (Blok)': parkingAreas
+        };
+      })
+    );
+
+    // Convert to CSV
+    const csvOutput = stringify(facilitiesWithBlocks, {
+      header: true,
+      delimiter: ',',
+      quoted: true,
+      quoted_empty: true
+    });
+
+    // Set headers for file download
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="tesisler_export.csv"');
+    
+    // Add BOM for Excel UTF-8 compatibility
+    res.send('\uFEFF' + csvOutput);
+  } catch (error) {
+    console.error('Export facilities error:', error);
+    res.status(500).json({ error: 'Failed to export facilities' });
+  }
+};
+
 module.exports = {
   getAllFacilities,
   getFacilityById,
@@ -352,5 +700,7 @@ module.exports = {
   addBlock,
   updateBlock,
   deleteBlock,
-  getFacilityStatistics
+  getFacilityStatistics,
+  importFacilitiesFromCSV,
+  exportFacilitiesToCSV
 };

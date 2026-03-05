@@ -35,17 +35,12 @@ app.use((req, res, next) => {
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
-
-// CORS
+// CORS - Must be before rate limiting and routes
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Body parser
@@ -54,6 +49,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Logging
 app.use(morgan('dev'));
+
+// Rate limiting - After CORS
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
 
 // Static files
 app.use('/uploads', express.static('uploads'));

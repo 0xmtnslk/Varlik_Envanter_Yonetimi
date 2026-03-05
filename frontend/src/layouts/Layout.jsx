@@ -13,7 +13,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown,
   Users,
   Building2,
   FileText
@@ -21,7 +20,6 @@ import {
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const { user, logout } = useAuth()
   const location = useLocation()
 
@@ -47,7 +45,6 @@ const Layout = () => {
     { name: 'Kullanıcılar', href: '/settings/users', icon: Users, roles: ['Admin', 'Manager', 'Hospital Manager', 'Central Manager'] },
     { name: 'Rol Yönetimi', href: '/settings/roles', icon: Users, roles: ['Admin', 'Hospital Manager', 'Central Manager'] },
     { name: 'Tesisler', href: '/settings/facilities', icon: Building2, roles: ['Admin', 'Central Manager'] },
-    { name: 'Taşeronler', href: '/settings/contractors', icon: FileText, roles: ['Admin', 'Central Manager', 'Hospital Manager'] },
   ]
 
   const filteredNavigation = navigationItems.filter(item => hasRole(item.roles))
@@ -106,6 +103,7 @@ const Layout = () => {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-3 py-4">
+            {/* Main Navigation */}
             <ul className="space-y-1">
               {filteredNavigation.map((item) => (
                 <li key={item.name}>
@@ -127,39 +125,28 @@ const Layout = () => {
 
             {/* Settings Section */}
             {filteredSettings.length > 0 && (
-              <div className="mt-6">
-                <button
-                  onClick={() => setSettingsOpen(!settingsOpen)}
-                  className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
-                >
-                  <Settings className="h-5 w-5 mr-3" />
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                   Ayarlar
-                  <ChevronDown
-                    className={`ml-auto h-4 w-4 transition-transform ${
-                      settingsOpen ? 'transform rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                {settingsOpen && (
-                  <ul className="mt-2 space-y-1 pl-3">
-                    {filteredSettings.map((item) => (
-                      <li key={item.name}>
-                        <Link
-                          to={item.href}
-                          className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            isActive(item.href)
-                              ? 'bg-primary-50 text-primary-700'
-                              : 'text-gray-600 hover:bg-gray-50'
-                          }`}
-                          onClick={() => setSidebarOpen(false)}
-                        >
-                          <item.icon className="h-4 w-4 mr-2" />
-                          {item.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                </h3>
+                <ul className="space-y-1">
+                  {filteredSettings.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive(item.href)
+                            ? 'bg-primary-50 text-primary-700'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setSidebarOpen(false)}
+                      >
+                        <item.icon className="h-5 w-5 mr-3" />
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </nav>
