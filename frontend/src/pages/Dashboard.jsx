@@ -6,9 +6,12 @@ import {
   AlertTriangle,
   CheckCircle,
   TrendingUp,
+  TrendingDown,
   Calendar,
-  Users,
-  Building2
+  Package2,
+  ArrowRight,
+  Activity,
+  Clock
 } from 'lucide-react'
 
 const Dashboard = () => {
@@ -27,7 +30,6 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch statistics
       const [assetsRes, maintenanceRes, faultRes] = await Promise.all([
         axios.get('/api/assets'),
         axios.get('/api/maintenance/statistics'),
@@ -41,7 +43,6 @@ const Dashboard = () => {
         completed: faultRes.data.completed || 0
       })
 
-      // Fetch recent activities (mock data for now)
       setRecentActivities([
         {
           id: 1,
@@ -81,128 +82,216 @@ const Dashboard = () => {
       title: 'Toplam Varlık',
       value: stats.assets,
       icon: Package,
-      color: 'primary',
+      gradient: 'from-blue-500 to-blue-600',
+      lightBg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
       change: '+12%',
-      changeType: 'increase'
+      changeType: 'increase',
+      description: 'Kayıtlı varlık sayısı'
     },
     {
       title: 'Bekleyen Bakım',
       value: stats.maintenance,
       icon: Wrench,
-      color: 'warning',
+      gradient: 'from-amber-500 to-orange-500',
+      lightBg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
       change: '+5%',
-      changeType: 'increase'
+      changeType: 'increase',
+      description: 'Planlanmış bakım'
     },
     {
       title: 'Açık Arıza Talepleri',
       value: stats.faultRequests,
       icon: AlertTriangle,
-      color: 'danger',
+      gradient: 'from-red-500 to-rose-600',
+      lightBg: 'bg-red-50',
+      iconColor: 'text-red-600',
       change: '-8%',
-      changeType: 'decrease'
+      changeType: 'decrease',
+      description: 'Bekleyen arıza'
     },
     {
       title: 'Tamamlanan İşler',
       value: stats.completed,
       icon: CheckCircle,
-      color: 'success',
+      gradient: 'from-emerald-500 to-green-600',
+      lightBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
       change: '+15%',
-      changeType: 'increase'
+      changeType: 'increase',
+      description: 'Bu ay tamamlanan'
+    }
+  ]
+
+  const quickActions = [
+    {
+      label: 'Arıza Bildir',
+      description: 'Yeni arıza talebi oluştur',
+      icon: AlertTriangle,
+      gradient: 'from-red-500 to-rose-500',
+      hoverBg: 'hover:bg-red-50',
+      borderColor: 'border-red-100',
+      iconBg: 'bg-red-100',
+      iconColor: 'text-red-600'
+    },
+    {
+      label: 'Bakım Planla',
+      description: 'Periyodik bakım ekle',
+      icon: Calendar,
+      gradient: 'from-blue-500 to-indigo-500',
+      hoverBg: 'hover:bg-blue-50',
+      borderColor: 'border-blue-100',
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600'
+    },
+    {
+      label: 'Varlık Ekle',
+      description: 'Yeni varlık kaydı',
+      icon: Package2,
+      gradient: 'from-emerald-500 to-green-500',
+      hoverBg: 'hover:bg-emerald-50',
+      borderColor: 'border-emerald-100',
+      iconBg: 'bg-emerald-100',
+      iconColor: 'text-emerald-600'
     }
   ]
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-100 border-t-primary-600"></div>
+        <p className="text-sm text-gray-500 animate-pulse">Veriler yükleniyor...</p>
       </div>
     )
   }
 
+  const today = new Date().toLocaleDateString('tr-TR', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  })
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gray-50 min-h-screen">
+
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Sistem genel bakış ve istatistikler</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Genel Bakış</h1>
+          <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            {today}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
+          <Activity className="h-4 w-4 text-emerald-500 animate-pulse" />
+          <span className="text-sm font-medium text-gray-700">Sistem Aktif</span>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((stat) => (
-          <div key={stat.title} className="card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                <div className={`flex items-center mt-2 text-sm ${
-                  stat.changeType === 'increase' ? 'text-success-600' : 'text-danger-600'
-                }`}>
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  {stat.change}
-                </div>
+          <div
+            key={stat.title}
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300 group"
+          >
+            <div className="flex items-start justify-between">
+              <div className={`p-3 rounded-xl ${stat.lightBg} group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
               </div>
-              <div className={`p-3 rounded-lg bg-${stat.color}-100`}>
-                <stat.icon className={`h-8 w-8 text-${stat.color}-600`} />
+              <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
+                stat.changeType === 'increase'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-red-50 text-red-700'
+              }`}>
+                {stat.changeType === 'increase'
+                  ? <TrendingUp className="h-3 w-3" />
+                  : <TrendingDown className="h-3 w-3" />
+                }
+                {stat.change}
               </div>
             </div>
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+              <p className="text-sm font-semibold text-gray-700 mt-1">{stat.title}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{stat.description}</p>
+            </div>
+            {/* Alt renkli çizgi */}
+            <div className={`mt-4 h-1 rounded-full bg-gradient-to-r ${stat.gradient} opacity-60`}></div>
           </div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Hızlı İşlemler</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-bold text-gray-900">Hızlı İşlemler</h2>
+          <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">3 işlem</span>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <AlertTriangle className="h-6 w-6 text-danger-600 mr-3" />
-            <div className="text-left">
-              <p className="font-medium text-gray-900">Arıza Bildir</p>
-              <p className="text-sm text-gray-600">Yeni arıza talebi oluştur</p>
-            </div>
-          </button>
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Calendar className="h-6 w-6 text-primary-600 mr-3" />
-            <div className="text-left">
-              <p className="font-medium text-gray-900">Bakım Planla</p>
-              <p className="text-sm text-gray-600">Periyodik bakım ekle</p>
-            </div>
-          </button>
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Package className="h-6 w-6 text-success-600 mr-3" />
-            <div className="text-left">
-              <p className="font-medium text-gray-900">Varlık Ekle</p>
-              <p className="text-sm text-gray-600">Yeni varlık kaydı</p>
-            </div>
-          </button>
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              className={`group flex items-center justify-between p-4 border ${action.borderColor} rounded-xl ${action.hoverBg} transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${action.iconBg} group-hover:scale-110 transition-transform duration-200`}>
+                  <action.icon className={`h-5 w-5 ${action.iconColor}`} />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-gray-900 text-sm">{action.label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:translate-x-1 group-hover:text-gray-600 transition-all duration-200" />
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Recent Activities */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Son Aktiviteler</h2>
-        <div className="space-y-4">
-          {recentActivities.map((activity) => (
-            <div key={activity.id} className="flex items-start p-4 border border-gray-200 rounded-lg">
-              <div className={`p-2 rounded-full mr-4 ${
-                activity.type === 'maintenance' ? 'bg-primary-100' :
-                activity.type === 'fault' ? 'bg-danger-100' :
-                'bg-success-100'
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-bold text-gray-900">Son Aktiviteler</h2>
+          <button className="text-xs font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors">
+            Tümünü Gör <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+        <div className="space-y-3">
+          {recentActivities.map((activity, index) => (
+            <div
+              key={activity.id}
+              className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors duration-200 group"
+            >
+              {/* İkon */}
+              <div className={`p-2.5 rounded-xl flex-shrink-0 ${
+                activity.type === 'maintenance' ? 'bg-blue-100' :
+                activity.type === 'fault' ? 'bg-red-100' :
+                'bg-emerald-100'
               }`}>
-                {activity.type === 'maintenance' && <Wrench className="h-5 w-5 text-primary-600" />}
-                {activity.type === 'fault' && <AlertTriangle className="h-5 w-5 text-danger-600" />}
-                {activity.type === 'asset' && <Package className="h-5 w-5 text-success-600" />}
+                {activity.type === 'maintenance' && <Wrench className="h-4 w-4 text-blue-600" />}
+                {activity.type === 'fault' && <AlertTriangle className="h-4 w-4 text-red-600" />}
+                {activity.type === 'asset' && <Package className="h-4 w-4 text-emerald-600" />}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">{activity.title}</h3>
-                  <span className="text-sm text-gray-500">{activity.time}</span>
+
+              {/* İçerik */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold text-gray-900 truncate">{activity.title}</p>
+                  <span className="text-xs text-gray-400 whitespace-nowrap flex items-center gap-1 flex-shrink-0">
+                    <Clock className="h-3 w-3" />
+                    {activity.time}
+                  </span>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                <span className={`inline-flex items-center mt-2 px-2 py-1 rounded-full text-xs font-medium ${
-                  activity.status === 'completed' ? 'bg-success-100 text-success-800' :
-                  'bg-warning-100 text-warning-800'
+                <p className="text-xs text-gray-500 mt-0.5">{activity.description}</p>
+                <span className={`inline-flex items-center gap-1 mt-2 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  activity.status === 'completed'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-amber-50 text-amber-700'
                 }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    activity.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}></span>
                   {activity.status === 'completed' ? 'Tamamlandı' : 'Bekliyor'}
                 </span>
               </div>
@@ -210,6 +299,7 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
     </div>
   )
 }

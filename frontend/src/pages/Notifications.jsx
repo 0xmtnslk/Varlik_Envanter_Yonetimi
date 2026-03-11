@@ -86,19 +86,19 @@ const Notifications = () => {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Bildirimler</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Bildirimler</h1>
+          <p className="text-sm text-gray-500 mt-1">
             {unreadCount > 0 && `${unreadCount} okunmamış bildirim`}
           </p>
         </div>
         {unreadCount > 0 && (
           <button
             onClick={markAllAsRead}
-            className="btn btn-secondary"
+            className="btn btn-secondary rounded-xl"
           >
             <Check className="h-5 w-5 mr-2" />
             Tümünü Okundu İşaretle
@@ -107,30 +107,30 @@ const Notifications = () => {
       </div>
 
       {/* Filter */}
-      <div className="card">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <div className="flex items-center gap-4">
           <Filter className="h-5 w-5 text-gray-400" />
           <div className="flex gap-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                filter === 'all' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-100'
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                filter === 'all' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               Tümü
             </button>
             <button
               onClick={() => setFilter('unread')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                filter === 'unread' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-100'
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                filter === 'unread' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               Okunmamış
             </button>
             <button
               onClick={() => setFilter('read')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                filter === 'read' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-100'
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                filter === 'read' ? 'bg-primary-100 text-primary-700' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               Okunmuş
@@ -141,13 +141,14 @@ const Notifications = () => {
 
       {/* Notifications */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-100 border-t-primary-600"></div>
+          <p className="text-sm text-gray-500 animate-pulse">Veriler yükleniyor...</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filteredNotifications.length === 0 ? (
-            <div className="card text-center py-12">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 text-center py-12">
               <Bell className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">Bildirim bulunamadı</p>
             </div>
@@ -155,7 +156,7 @@ const Notifications = () => {
             filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`card relative ${!notification.is_read ? 'bg-blue-50 border-l-4 border-l-primary-500' : ''}`}
+                className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300 relative ${!notification.is_read ? 'bg-blue-50 border-l-4 border-l-primary-500' : ''}`}
               >
                 <div className="flex items-start">
                   <div className={`p-3 rounded-full mr-4 ${getNotificationIcon(notification.notification_type)}`}>
@@ -180,7 +181,7 @@ const Notifications = () => {
                         {!notification.is_read && (
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
                             title="Okundu işaretle"
                           >
                             <Check className="h-5 w-5 text-gray-600" />
@@ -188,7 +189,7 @@ const Notifications = () => {
                         )}
                         <button
                           onClick={() => deleteNotification(notification.id)}
-                          className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                          className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
                           title="Sil"
                         >
                           <Trash2 className="h-5 w-5 text-gray-600" />
