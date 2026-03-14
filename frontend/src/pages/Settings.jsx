@@ -1,8 +1,9 @@
 import { useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Users, Bell, FileText, Settings as SettingsIcon } from 'lucide-react'
+import { Users, Bell, FileText, Settings as SettingsIcon, ClipboardCheck } from 'lucide-react'
 import EquipmentHierarchy from '../components/EquipmentHierarchy'
 import EquipmentCategories from '../components/EquipmentCategories'
+import ChecklistSettings from '../components/ChecklistSettings'
 
 const SettingsPage = () => {
   const { tab } = useParams()
@@ -131,6 +132,8 @@ const SettingsPage = () => {
         return 'Alan Türleri'
       case 'equipment-hierarchy':
         return 'Ekipman Cinsi Ayarları'
+      case 'checklist-settings':
+        return 'Bakım Kontrol Ayarları'
       default:
         return 'Ayarlar'
     }
@@ -378,6 +381,9 @@ const SettingsPage = () => {
         )}
         {activeTab === 'equipment-hierarchy' && (
           <EquipmentHierarchy />
+        )}
+        {activeTab === 'checklist-settings' && (
+          <ChecklistSettings />
         )}
         {activeTab === 'notifications' && (
           <div>

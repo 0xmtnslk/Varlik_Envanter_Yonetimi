@@ -531,3 +531,101 @@ CREATE TRIGGER update_notification_settings_updated_at BEFORE UPDATE ON notifica
 
 CREATE TRIGGER update_system_settings_updated_at BEFORE UPDATE ON system_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- CHECKLIST MANAGEMENT MODULE
+-- ============================================================================
+
+-- Checklist Templates Table
+-- Stores template definitions for checklists (ISG, BAKIM, GENEL, etc.)
+CREATE TABLE IF NOT EXISTS checklist_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    checklist_type VARCHAR(50) NOT NULL, -- 'ISG', 'BAKIM', 'GENEL', etc.
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Checklist Items Table
+-- Stores individual questions/items within a checklist template
+CREATE TABLE IF NOT EXISTS checklist_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    template_id UUID NOT NULL REFERENCES checklist_templates(id) ON DELETE CASCADE,
+    order_index INTEGER NOT NULL DEFAULT 0,
+    question TEXT NOT NULL,
+    item_type VARCHAR(50) NOT NULL, -- 'boolean', 'numeric', 'text', 'photo', 'select'
+    is_required BOOLEAN NOT NULL DEFAULT true,
+    options JSONB, -- For select type: ["Uygun", "Uygun Değil", "N/A"]
+    validation_rules JSONB, -- For numeric: {"min": 0, "max": 10, "unit": "bar"}
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Checklist Assignment Rules Table
+-- Defines which templates apply to which assets/categories/maintenance types
+CREATE TABLE IF NOT EXISTS checklist_assignment_rules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    template_id UUID NOT NULL REFERENCES checklist_templates(id) ON DELETE CASCADE,
+    priority INTEGER NOT NULL DEFAULT 1, -- Lower number = higher priority
+    scope_type VARCHAR(50) NOT NULL, -- 'ASSET', 'CATEGORY', 'GLOBAL'
+    asset_id UUID REFERENCES assets(id) ON DELETE CASCADE,
+    category_id UUID REFERENCES asset_categories(id) ON DELETE CASCADE,
+    maintenance_type VARCHAR(50) NOT NULL DEFAULT 'ALL', -- 'IC_BAKIM', 'DIS_BAKIM', 'ISG', 'ALL'
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_scope_asset CHECK (
+        (scope_type = 'ASSET' AND asset_id IS NOT NULL AND category_id IS NULL) OR
+        (scope_type = 'CATEGORY' AND category_id IS NOT NULL AND asset_id IS NULL) OR
+        (scope_type = 'GLOBAL' AND asset_id IS NULL AND category_id IS NULL)
+    )
+);
+
+-- Work Order Checklists Table
+-- Stores checklist instances linked to maintenance records/work orders
+CREATE TABLE IF NOT EXISTS work_order_checklists (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    work_order_id UUID NOT NULL REFERENCES maintenance_records(id) ON DELETE CASCADE,
+    template_id UUID NOT NULL REFERENCES checklist_templates(id),
+    asset_id UUID NOT NULL REFERENCES assets(id),
+    status VARCHAR(50) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'IN_PROGRESS', 'COMPLETED'
+    snapshot JSONB NOT NULL, -- Snapshot of template and items at creation time
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Checklist Responses Table
+-- Stores user responses to checklist items
+CREATE TABLE IF NOT EXISTS checklist_responses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    work_order_checklist_id UUID NOT NULL REFERENCES work_order_checklists(id) ON DELETE CASCADE,
+    item_id UUID NOT NULL REFERENCES checklist_items(id),
+    response_value JSONB NOT NULL, -- {"value": true/false/number/string} or {"urls": [...]}
+    is_compliant BOOLEAN, -- Calculated based on validation rules
+    notes TEXT,
+    responded_by UUID NOT NULL REFERENCES users(id),
+    responded_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for checklist tables
+CREATE INDEX IF NOT EXISTS idx_checklist_templates_type ON checklist_templates(checklist_type);
+CREATE INDEX IF NOT EXISTS idx_checklist_templates_active ON checklist_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_checklist_items_template ON checklist_items(template_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_items_order ON checklist_items(template_id, order_index);
+CREATE INDEX IF NOT EXISTS idx_checklist_assignment_rules_template ON checklist_assignment_rules(template_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_assignment_rules_asset ON checklist_assignment_rules(asset_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_assignment_rules_category ON checklist_assignment_rules(category_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_assignment_rules_type ON checklist_assignment_rules(maintenance_type);
+CREATE INDEX IF NOT EXISTS idx_checklist_assignment_rules_active ON checklist_assignment_rules(is_active);
+CREATE INDEX IF NOT EXISTS idx_work_order_checklists_work_order ON work_order_checklists(work_order_id);
+CREATE INDEX IF NOT EXISTS idx_work_order_checklists_asset ON work_order_checklists(asset_id);
+CREATE INDEX IF NOT EXISTS idx_work_order_checklists_status ON work_order_checklists(status);
+CREATE INDEX IF NOT EXISTS idx_checklist_responses_checklist ON checklist_responses(work_order_checklist_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_responses_item ON checklist_responses(item_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_responses_responded_by ON checklist_responses(responded_by);
+
+-- Create triggers for updated_at timestamps on checklist tables
+CREATE TRIGGER update_checklist_templates_updated_at BEFORE UPDATE ON checklist_templates
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_checklist_assignment_rules_updated_at BEFORE UPDATE ON checklist_assignment_rules
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

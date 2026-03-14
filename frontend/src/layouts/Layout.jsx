@@ -15,7 +15,8 @@ import {
   X,
   Users,
   Building2,
-  FileText
+  FileText,
+  ClipboardCheck
 } from 'lucide-react'
 
 const Layout = () => {
@@ -48,6 +49,7 @@ const Layout = () => {
     { name: 'Tesisler', href: '/settings/facilities', icon: Building2, roles: ['Admin', 'Central Manager'] },
     { name: 'Alan Türleri', href: '/settings/area-types', icon: Map, roles: ['Admin', 'Central Manager'] },
     { name: 'Ekipman Cinsi Ayarları', href: '/settings/equipment-hierarchy', icon: FileText, roles: ['Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'] },
+    { name: 'Bakım Kontrol Ayarları', href: '/settings/checklist-settings', icon: ClipboardCheck, roles: ['Admin', 'Manager', 'Hospital Manager', 'Central Manager', 'Technical Responsible'] },
   ]
 
   const filteredNavigation = navigationItems.filter(item => hasRole(item.roles))

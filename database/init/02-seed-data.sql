@@ -208,3 +208,319 @@ SELECT u.id, r.id, u.id, CURRENT_TIMESTAMP
 FROM users u, roles r
 WHERE u.oracle_id = 'ADMIN001' AND r.name = 'Admin'
 ON CONFLICT DO NOTHING;
+
+-- ============================================================================
+-- CHECKLIST MODULE SEED DATA
+-- ============================================================================
+
+-- Insert Default Checklist Templates
+-- 1. General ISG Checklist (Global scope)
+INSERT INTO checklist_templates (name, description, checklist_type, is_active) VALUES
+('Genel İSG Kontrol Listesi', 'Tüm ekipmanlar için genel iş sağlığı ve güvenliği kontrolü', 'ISG', true)
+ON CONFLICT DO NOTHING;
+
+-- 2. Monthly Maintenance Checklist for Compressors
+INSERT INTO checklist_templates (name, description, checklist_type, is_active) VALUES
+('Kompresör Aylık Bakım Kontrol Listesi', 'Kompresörler için aylık bakım kontrolü', 'BAKIM', true)
+ON CONFLICT DO NOTHING;
+
+-- 3. General Daily Inspection Checklist
+INSERT INTO checklist_templates (name, description, checklist_type, is_active) VALUES
+('Günlük Gözetim Kontrol Listesi', 'Tüm kritik ekipmanlar için günlük gözetim', 'GENEL', true)
+ON CONFLICT DO NOTHING;
+
+-- Insert Checklist Items for General ISG Checklist
+-- Get the template ID first (we'll use a subquery in the inserts)
+WITH isg_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Genel İSG Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    1, 
+    'Kişisel koruyucu ekipmanlar (KKE) kullanılıyor mu?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM isg_template t
+ON CONFLICT DO NOTHING;
+
+WITH isg_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Genel İSG Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    2, 
+    'Ekipman çevresinde güvenlik uyarıları işaretli mi?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM isg_template t
+ON CONFLICT DO NOTHING;
+
+WITH isg_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Genel İSG Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    3, 
+    'Acil durum çıkışları engelsiz mi?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM isg_template t
+ON CONFLICT DO NOTHING;
+
+WITH isg_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Genel İSG Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    4, 
+    'Yangın söndürücüler erişilebilir durumda ve son kullanma tarihi geçerli mi?', 
+    'select', 
+    true, 
+    '["Evet", "Hayır", "Kısmen"]'::jsonb,
+    '{"non_compliant_values": ["Hayır"]}'::jsonb
+FROM isg_template t
+ON CONFLICT DO NOTHING;
+
+WITH isg_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Genel İSG Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    5, 
+    'Güvenlik talimatları görülebilir yerlerde asılı mı?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM isg_template t
+ON CONFLICT DO NOTHING;
+
+-- Insert Checklist Items for Compressor Monthly Maintenance Checklist
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    1, 
+    'Yağ seviyesi normal aralıkta mı?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    2, 
+    'Hava filtresi temiz mi?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    3, 
+    'Çalışma basıncı (bar)', 
+    'numeric', 
+    true, 
+    NULL, 
+    '{"min": 6, "max": 8, "unit": "bar"}'::jsonb
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    4, 
+    'Sıcaklık (°C)', 
+    'numeric', 
+    true, 
+    NULL, 
+    '{"min": 60, "max": 90, "unit": "°C"}'::jsonb
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    5, 
+    'Vibrasyon seviyesi normal mi?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    6, 
+    'Sızıntı tespit edildi mi?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    7, 
+    'Emniyet valfi çalışıyor mu?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    8, 
+    'Bakım notları', 
+    'text', 
+    false, 
+    NULL, 
+    NULL
+FROM compressor_template t
+ON CONFLICT DO NOTHING;
+
+-- Insert Checklist Items for General Daily Inspection Checklist
+WITH daily_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Günlük Gözetim Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    1, 
+    'Ekipman genel durumu', 
+    'select', 
+    true, 
+    '["Mükemmel", "İyi", "Orta", "Kötü"]'::jsonb,
+    '{"non_compliant_values": ["Kötü"]}'::jsonb
+FROM daily_template t
+ON CONFLICT DO NOTHING;
+
+WITH daily_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Günlük Gözetim Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    2, 
+    'Anormal ses veya vibrasyon var mı?', 
+    'boolean', 
+    true, 
+    NULL, 
+    NULL
+FROM daily_template t
+ON CONFLICT DO NOTHING;
+
+WITH daily_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Günlük Gözetim Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_items (template_id, order_index, question, item_type, is_required, options, validation_rules)
+SELECT 
+    t.id, 
+    3, 
+    'Kontrol fotoğrafı', 
+    'photo', 
+    false, 
+    NULL, 
+    NULL
+FROM daily_template t
+ON CONFLICT DO NOTHING;
+
+-- Insert Checklist Assignment Rules
+-- 1. Global ISG rule (applies to all assets for ISG maintenance type)
+WITH isg_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Genel İSG Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_assignment_rules (template_id, priority, scope_type, asset_id, category_id, maintenance_type, is_active)
+SELECT 
+    t.id, 
+    1, 
+    'GLOBAL', 
+    NULL, 
+    NULL, 
+    'ISG', 
+    true
+FROM isg_template t
+ON CONFLICT DO NOTHING;
+
+-- 2. Compressor category rule for monthly maintenance
+WITH compressor_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Kompresör Aylık Bakım Kontrol Listesi' LIMIT 1
+),
+compressor_category AS (
+    SELECT id FROM asset_categories WHERE name = 'Jeneratör' LIMIT 1
+)
+INSERT INTO checklist_assignment_rules (template_id, priority, scope_type, asset_id, category_id, maintenance_type, is_active)
+SELECT 
+    t.id, 
+    1, 
+    'CATEGORY', 
+    NULL, 
+    c.id, 
+    'Aylık Bakım', 
+    true
+FROM compressor_template t, compressor_category c
+ON CONFLICT DO NOTHING;
+
+-- 3. Global daily inspection rule
+WITH daily_template AS (
+    SELECT id FROM checklist_templates WHERE name = 'Günlük Gözetim Kontrol Listesi' LIMIT 1
+)
+INSERT INTO checklist_assignment_rules (template_id, priority, scope_type, asset_id, category_id, maintenance_type, is_active)
+SELECT 
+    t.id, 
+    1, 
+    'GLOBAL', 
+    NULL, 
+    NULL, 
+    'Günlük Kontrol', 
+    true
+FROM daily_template t
+ON CONFLICT DO NOTHING;

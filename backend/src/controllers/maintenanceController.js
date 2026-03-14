@@ -1,4 +1,5 @@
 const { query } = require('../config/database');
+const checklistService = require('../services/checklistService');
 
 const getAllMaintenancePlans = async (req, res) => {
   try {
@@ -309,7 +310,35 @@ const createMaintenanceRecord = async (req, res) => {
       ]
     );
     
-    res.status(201).json({ message: 'Maintenance record created successfully', maintenance_record: result.rows[0] });
+    const maintenanceRecord = result.rows[0];
+    
+    // Automatically generate checklists for this maintenance record
+    // Get maintenance type name
+    const maintenanceTypeResult = await query(
+      'SELECT name FROM maintenance_types WHERE id = $1',
+      [maintenance_type_id]
+    );
+    
+    if (maintenanceTypeResult.rows.length > 0) {
+      const maintenanceType = maintenanceTypeResult.rows[0].name;
+      
+      try {
+        // Generate checklists based on asset and maintenance type
+        const checklists = await checklistService.generateWorkOrderChecklists(
+          maintenanceRecord.id,
+          asset_id,
+          maintenanceType
+        );
+        
+        maintenanceRecord.generated_checklists = checklists.length;
+      } catch (checklistError) {
+        // Log error but don't fail the maintenance record creation
+        console.error('Error generating checklists:', checklistError);
+        maintenanceRecord.generated_checklists = 0;
+      }
+    }
+    
+    res.status(201).json({ message: 'Maintenance record created successfully', maintenance_record: maintenanceRecord });
   } catch (error) {
     console.error('Create maintenance record error:', error);
     res.status(500).json({ error: 'Failed to create maintenance record' });

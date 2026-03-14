@@ -20,6 +20,7 @@ const calendarRoutes = require('./routes/calendar');
 const notificationRoutes = require('./routes/notifications');
 const settingsRoutes = require('./routes/settings');
 const contractorRoutes = require('./routes/contractors');
+const checklistRoutes = require('./routes/checklists');
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/contractors', contractorRoutes);
+app.use('/api/checklists', checklistRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
