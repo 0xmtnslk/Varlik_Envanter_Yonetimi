@@ -44,8 +44,10 @@ const Layout = () => {
     { name: 'Bildirim Ayarları', href: '/settings/notifications', icon: Bell, roles: ['User', 'Technical Responsible', 'Administrative Responsible', 'Biomedical Responsible', 'Information Systems Responsible', 'Manager', 'Hospital Manager', 'Central Manager', 'Admin'] },
     { name: 'Kullanıcılar', href: '/settings/users', icon: Users, roles: ['Admin', 'Manager', 'Hospital Manager', 'Central Manager'] },
     { name: 'Rol Yönetimi', href: '/settings/roles', icon: Users, roles: ['Admin', 'Hospital Manager', 'Central Manager'] },
+    { name: 'Varlık Kategorileri', href: '/settings/categories', icon: Package, roles: ['Admin', 'Central Manager'] },
     { name: 'Tesisler', href: '/settings/facilities', icon: Building2, roles: ['Admin', 'Central Manager'] },
     { name: 'Alan Türleri', href: '/settings/area-types', icon: Map, roles: ['Admin', 'Central Manager'] },
+    { name: 'Ekipman Cinsi Ayarları', href: '/settings/equipment-hierarchy', icon: FileText, roles: ['Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'] },
   ]
 
   const filteredNavigation = navigationItems.filter(item => hasRole(item.roles))

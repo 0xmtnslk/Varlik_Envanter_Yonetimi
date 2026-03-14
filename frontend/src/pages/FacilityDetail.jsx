@@ -32,7 +32,7 @@ const FacilityDetail = () => {
   const fetchFacility = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${id}`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -50,7 +50,7 @@ const FacilityDetail = () => {
   const fetchBlocks = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${id}/blocks`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${id}/blocks`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -72,7 +72,7 @@ const FacilityDetail = () => {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${id}`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -97,8 +97,8 @@ const FacilityDetail = () => {
     try {
       const token = localStorage.getItem('token')
       const url = editingBlock
-        ? `http://localhost:5001/api/facilities/${id}/blocks/${editingBlock.id}`
-        : `http://localhost:5001/api/facilities/${id}/blocks`
+        ? `http://localhost:3001/api/facilities/${id}/blocks/${editingBlock.id}`
+        : `http://localhost:3001/api/facilities/${id}/blocks`
       
       const method = editingBlock ? 'PUT' : 'POST'
       
@@ -132,7 +132,7 @@ const FacilityDetail = () => {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${id}/blocks/${blockId}`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${id}/blocks/${blockId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

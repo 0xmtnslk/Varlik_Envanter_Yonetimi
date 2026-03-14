@@ -124,7 +124,7 @@ const FacilityForm = () => {
   const fetchFacility = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${id}`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -154,7 +154,7 @@ const FacilityForm = () => {
 
       // Fetch blocks if they exist
       try {
-        const blocksResponse = await fetch(`http://localhost:5001/api/facilities/${id}/blocks`, {
+        const blocksResponse = await fetch(`http://localhost:3001/api/facilities/${id}/blocks`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -271,8 +271,8 @@ const FacilityForm = () => {
       }
       
       const url = isEditing
-        ? `http://localhost:5001/api/facilities/${id}`
-        : 'http://localhost:5001/api/facilities'
+        ? `http://localhost:3001/api/facilities/${id}`
+        : 'http://localhost:3001/api/facilities'
       
       const method = isEditing ? 'PUT' : 'POST'
       

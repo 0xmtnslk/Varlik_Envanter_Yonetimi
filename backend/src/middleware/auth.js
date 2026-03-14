@@ -32,7 +32,11 @@ const authorize = (...roles) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
     
-    if (!roles.includes(req.user.role)) {
+    // Check if user has any of the required roles
+    const userRoles = req.user.roles || [];
+    const hasRequiredRole = roles.some(role => userRoles.includes(role));
+    
+    if (!hasRequiredRole) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     
@@ -53,7 +57,8 @@ const checkFacilityAccess = (req, res, next) => {
   }
   
   // Admin and Central Manager can access all facilities
-  if (['Admin', 'Central Manager'].includes(req.user.role)) {
+  const userRoles = req.user.roles || [];
+  if (userRoles.includes('Admin') || userRoles.includes('Central Manager')) {
     return next();
   }
   

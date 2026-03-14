@@ -4,11 +4,12 @@ const { query } = require('../config/database');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { 
-      id: user.id, 
-      email: user.email, 
-      role: user.role_name,
-      facilities: user.facilities 
+    {
+        id: user.id,
+        email: user.email,
+        role: user.role_names && user.role_names.length > 0 ? user.role_names[0] : 'User',
+        roles: user.role_names || [],
+        facilities: user.facilities
     },
     process.env.JWT_SECRET || 'your_jwt_secret_key_change_in_production',
     { expiresIn: '24h' }

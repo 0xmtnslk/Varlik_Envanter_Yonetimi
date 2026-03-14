@@ -88,7 +88,7 @@ const FacilitiesManagement = () => {
   const fetchFacilities = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5001/api/facilities', {
+      const response = await fetch('http://localhost:3001/api/facilities', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -106,7 +106,7 @@ const FacilitiesManagement = () => {
   const fetchBlocks = async (facilityId) => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${facilityId}/blocks`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${facilityId}/blocks`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -145,8 +145,8 @@ const FacilitiesManagement = () => {
     try {
       const token = localStorage.getItem('token')
       const url = editingFacility
-        ? `http://localhost:5001/api/facilities/${editingFacility.id}`
-        : 'http://localhost:5001/api/facilities'
+        ? `http://localhost:3001/api/facilities/${editingFacility.id}`
+        : 'http://localhost:3001/api/facilities'
       
       const method = editingFacility ? 'PUT' : 'POST'
       
@@ -181,8 +181,8 @@ const FacilitiesManagement = () => {
     try {
       const token = localStorage.getItem('token')
       const url = editingBlock
-        ? `http://localhost:5001/api/facilities/${selectedFacility.id}/blocks/${editingBlock.id}`
-        : `http://localhost:5001/api/facilities/${selectedFacility.id}/blocks`
+        ? `http://localhost:3001/api/facilities/${selectedFacility.id}/blocks/${editingBlock.id}`
+        : `http://localhost:3001/api/facilities/${selectedFacility.id}/blocks`
       
       const method = editingBlock ? 'PUT' : 'POST'
       
@@ -216,7 +216,7 @@ const FacilitiesManagement = () => {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${id}`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -240,7 +240,7 @@ const FacilitiesManagement = () => {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5001/api/facilities/${selectedFacility.id}/blocks/${blockId}`, {
+      const response = await fetch(`http://localhost:3001/api/facilities/${selectedFacility.id}/blocks/${blockId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -359,7 +359,7 @@ const FacilitiesManagement = () => {
     setExporting(true)
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5001/api/facilities/export', {
+      const response = await fetch('http://localhost:3001/api/facilities/export', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -399,7 +399,7 @@ const FacilitiesManagement = () => {
       const formData = new FormData()
       formData.append('file', importFile)
       
-      const response = await fetch('http://localhost:5001/api/facilities/import', {
+      const response = await fetch('http://localhost:3001/api/facilities/import', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

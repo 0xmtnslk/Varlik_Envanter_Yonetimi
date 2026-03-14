@@ -7,11 +7,11 @@ const isDocker = process.env.VITE_API_URL && process.env.VITE_API_URL.includes('
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: isDocker ? '0.0.0.0' : '0.0.0.0',
+    host: '0.0.0.0',
     port: 3000,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        target: 'http://backend:3001',
         changeOrigin: true,
       }
     }

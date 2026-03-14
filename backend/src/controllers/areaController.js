@@ -74,12 +74,12 @@ const updateAreaType = async (req, res) => {
 const deleteAreaType = async (req, res) => {
   try {
     const result = await query(
-      'DELETE FROM area_types WHERE id = $1 AND is_system = false RETURNING id',
+      'DELETE FROM area_types WHERE id = $1 RETURNING id',
       [req.params.id]
     );
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Area type not found or cannot be deleted' });
+      return res.status(404).json({ error: 'Area type not found' });
     }
     
     res.json({ message: 'Area type deleted successfully' });

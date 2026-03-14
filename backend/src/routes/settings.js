@@ -11,6 +11,12 @@ router.get('/system', authorize('Admin', 'Central Manager'), settingsController.
 router.put('/system/:key', authorize('Admin', 'Central Manager'), settingsController.updateSystemSetting);
 router.post('/system', authorize('Admin', 'Central Manager'), settingsController.createSystemSetting);
 
+// Equipment Categories (Multi-level hierarchy)
+router.get('/equipment-categories', settingsController.getEquipmentCategories);
+router.post('/equipment-categories', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.createEquipmentCategory);
+router.put('/equipment-categories/:id', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.updateEquipmentCategory);
+router.delete('/equipment-categories/:id', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.deleteEquipmentCategory);
+
 // Asset Categories
 router.get('/categories', settingsController.getAssetCategories);
 router.get('/categories/:id', settingsController.getAssetCategoryById);
@@ -45,5 +51,13 @@ router.get('/maintenance-types/:id', settingsController.getMaintenanceTypeById);
 router.post('/maintenance-types', authorize('Admin', 'Central Manager'), settingsController.createMaintenanceType);
 router.put('/maintenance-types/:id', authorize('Admin', 'Central Manager'), settingsController.updateMaintenanceType);
 router.delete('/maintenance-types/:id', authorize('Admin', 'Central Manager'), settingsController.deleteMaintenanceType);
+
+// Equipment Hierarchy (4-level tree structure)
+router.get('/equipment-hierarchy', settingsController.getEquipmentHierarchy);
+router.get('/equipment-hierarchy/:id', settingsController.getEquipmentHierarchyById);
+router.post('/equipment-hierarchy', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.createEquipmentHierarchy);
+router.put('/equipment-hierarchy/:id', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.updateEquipmentHierarchy);
+router.delete('/equipment-hierarchy/:id', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.deleteEquipmentHierarchy);
+router.patch('/equipment-hierarchy/:id/move', authorize('Admin', 'Central Manager', 'Hospital Manager', 'Manager', 'Administrative Responsible', 'Technical Responsible'), settingsController.moveEquipmentHierarchy);
 
 module.exports = router;
